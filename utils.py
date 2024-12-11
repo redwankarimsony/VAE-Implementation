@@ -1,6 +1,8 @@
 import os
-import torch
+
 import matplotlib.pyplot as plt
+import torch
+
 
 def save_model(model, path):
     """
@@ -13,7 +15,8 @@ def save_model(model, path):
     torch.save(model.state_dict(), path)
     print(f"Model saved to {path}")
 
-def save_loss_curves(train_losses, val_losses, output_dir):
+
+def save_loss_curves(train_losses, val_losses, output_dir, filename="loss_curves.png"):
     """
     Saves the training and validation loss curves as a PNG file.
 
@@ -25,11 +28,12 @@ def save_loss_curves(train_losses, val_losses, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     plt.figure()
     plt.plot(range(1, len(train_losses) + 1), train_losses, label="Train Loss")
-    plt.plot(range(1, len(val_losses) + 1), val_losses, label="Validation Loss")
+    plt.plot(range(1, len(val_losses) + 1),
+             val_losses, label="Validation Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
     plt.title("Training and Validation Loss Curves")
-    plt.savefig(os.path.join(output_dir, "loss_curves.png"))
+    plt.savefig(os.path.join(output_dir, filename))
     plt.close()
-    print(f"Loss curves saved to {os.path.join(output_dir, 'loss_curves.png')}")
+    print(f"Loss curves saved to {os.path.join(output_dir, filename)}")

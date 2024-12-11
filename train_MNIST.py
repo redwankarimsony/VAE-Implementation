@@ -99,7 +99,7 @@ def main(args):
     save_model(model, os.path.join(checkpoint_dir, "vae_mnist.pth"))
 
     # Save training and validation loss curves
-    save_loss_curves(train_losses, val_losses, checkpoint_dir)
+    save_loss_curves(train_losses, val_losses, checkpoint_dir, "loss_curves_mnist.png")
 
     # Export model to ONNX format
     onnx_model_path = os.path.join(checkpoint_dir, "vae_mnist.onnx")
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train a Variational Autoencoder on MNIST dataset")
     parser.add_argument("--batch_size", type=int, default=128, help="Number of samples in a batch")
     parser.add_argument("--learning_rate", type=float, default=1e-3, help="Learning rate for optimizer")
-    parser.add_argument("--latent_dim", type=int, default=20, help="Dimension of the latent space")
+    parser.add_argument("--latent_dim", type=int, default=32, help="Dimension of the latent space")
     parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs")
     args = parser.parse_args()
     args.device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
