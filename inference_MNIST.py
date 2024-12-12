@@ -43,7 +43,7 @@ def reconstruct_images(model, data_loader, device, output_dir):
         reconstructed, _, _ = model(images)
 
     # Save original and reconstructed images
-    fig, axs = plt.subplots(2, len(images), figsize=(15, 4))
+    fig, axs = plt.subplots(2, len(images), figsize=(15, 2))
     for i in range(len(images)):
         # Original image
         axs[0, i].imshow(images[i].cpu().squeeze(), cmap="gray")
@@ -76,7 +76,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference with a trained Variational Autoencoder on MNIST dataset")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the trained VAE model")
-    parser.add_argument("--latent_dim", type=int, required=True, help="Latent dimension size")
+    parser.add_argument("--latent_dim", type=int, default=32, help="Latent dimension size")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for inference")
     parser.add_argument("--output_dir", type=str, default="inference_results", help="Directory to save reconstructed images")
     args = parser.parse_args()
