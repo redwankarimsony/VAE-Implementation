@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, random_split
 import os
 import argparse
 import matplotlib.pyplot as plt
-from models import VAE_CIFAR
+from models import VAE_CIFAR_CNN  # Updated model with CNNs
 from datasets import get_cifar10_datasets
 from utils import save_loss_curves, save_model
 
@@ -20,11 +20,24 @@ def main(args):
     latent_dim = args.latent_dim
     epochs = args.epochs
 
+    # Data Augmentations for Training
+    transform_train = transforms.Compose([
+        transforms.RandomHorizontalFlip(),  # Randomly flip images horizontally
+        transforms.RandomCrop(32, padding=4),  # Random crop with padding
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Adjust color
+        transforms.ToTensor(),  # Convert to tensor
+    ])
+
+    # Transform for Validation (no augmentation)
+    transform_val = transforms.Compose([
+        transforms.ToTensor(),  # Convert to tensor
+    ])
+
     # Load datasets
-    train_loader, val_loader = get_cifar10_datasets(batch_size)
+    train_loader, val_loader = get_cifar10_datasets(batch_size, transform_train, transform_val)
 
     # Instantiate the model
-    model = VAE_CIFAR(latent_dim).to(device)
+    model = VAE_CIFAR_CNN(latent_dim).to(device)
 
     # Loss function
     # Reconstruction loss + KL divergence
@@ -32,7 +45,7 @@ def main(args):
     
     def loss_function(recon_x, x, mu, log_var):
         # Ensure input to BCELoss is in range [0, 1]
-        recon_loss = criterion(recon_x, x.view(-1, 3 * 32 * 32))
+        recon_loss = criterion(recon_x, x)
         kl_divergence = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
         return recon_loss + kl_divergence
 
@@ -46,7 +59,7 @@ def main(args):
     checkpoint_dir = "checkpoints"
     os.makedirs(checkpoint_dir, exist_ok=True)
 
-    # Training loop with validation and saving best model
+    # Training loop with validation and saving the best model
     best_val_loss = float("inf")
     train_losses = []
     val_losses = []
@@ -88,18 +101,18 @@ def main(args):
         # Save best model
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            save_model(model, os.path.join(checkpoint_dir, "vae_cifar_best.pth"))
+            save_model(model, os.path.join(checkpoint_dir, "vae_cifar_cnn_best.pth"))
 
         scheduler.step()
 
     # Save the final model
-    save_model(model, os.path.join(checkpoint_dir, "vae_cifar.pth"))
+    save_model(model, os.path.join(checkpoint_dir, "vae_cifar_cnn.pth"))
 
     # Save training and validation loss curves
     save_loss_curves(train_losses, val_losses, checkpoint_dir)
 
     # Export model to ONNX format
-    onnx_model_path = os.path.join(checkpoint_dir, "vae_cifar.onnx")
+    onnx_model_path = os.path.join(checkpoint_dir, "vae_cifar_cnn.onnx")
     # Set the model to inference mode
     model.eval()
     # Dummy input for tracing the model
@@ -109,10 +122,10 @@ def main(args):
     print(f"Model saved to {onnx_model_path} in ONNX format")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train a Variational Autoencoder on CIFAR-10 dataset")
+    parser = argparse.ArgumentParser(description="Train a CNN-based Variational Autoencoder on CIFAR-10 dataset")
     parser.add_argument("--batch_size", type=int, default=128, help="Number of samples in a batch")
     parser.add_argument("--learning_rate", type=float, default=1e-3, help="Learning rate for optimizer")
-    parser.add_argument("--latent_dim", type=int, default=32, help="Dimension of the latent space")
+    parser.add_argument("--latent_dim", type=int, default=256, help="Dimension of the latent space")
     parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs")
     args = parser.parse_args()
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
